@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SUDOKU — The Daily Grid</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="screen active">
+  <div class="login-box">
+    <div class="masthead">SU<span>·</span>DO<span>·</span>KU</div>
+    <div class="tagline">The Daily Number Grid</div>
+    <div class="login-divider"></div>
+    <label class="login-label" for="usernameInput">Enter your player name</label>
+    <input class="login-input" id="usernameInput" type="text" placeholder="e.g. PuzzleMaster99" maxlength="20" autocomplete="off" />
+    <button class="btn-primary" onclick="login()">▶ &nbsp;Start Playing</button>
+    <div class="login-recent" id="recentSection" style="display:none;">
+      <div class="recent-label">Recent Players</div>
+      <div class="recent-pills" id="recentPills"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP SCREEN -->
+<div id="appScreen" class="screen">
+
+  <aside class="sidebar">
+    <div class="sb-logo">SU<span>·</span>DO<span>·</span>KU</div>
+    <div class="sb-user">
+      <div class="avatar" id="avatarEl"></div>
+      <div class="user-info">
+        <div class="user-name" id="userNameEl"></div>
+        <div class="user-sub">Player</div>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <button class="nav-item active" onclick="showPage('game')" id="navGame"><span class="nav-icon">⬜</span> Play</button>
+      <button class="nav-item" onclick="showPage('history')" id="navHistory"><span class="nav-icon">📋</span> History</button>
+    </nav>
+    <div class="sb-stats" id="sbStats">
+      <div class="recent-label" style="font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem;font-family:'DM Mono',monospace;">Your Stats</div>
+      <div class="stat-row"><span class="stat-key">Games Won</span><span class="stat-val" id="statWins">0</span></div>
+      <div class="stat-row"><span class="stat-key">Best Time</span><span class="stat-val" id="statBest">—</span></div>
+      <div class="stat-row"><span class="stat-key">Total Games</span><span class="stat-val" id="statTotal">0</span></div>
+      <div class="stat-row"><span class="stat-key">Avg Mistakes</span><span class="stat-val" id="statAvgErr">—</span></div>
+    </div>
+    <button class="logout-btn" onclick="logout()">↩ Switch Player</button>
+  </aside>
+
+  <main class="main-content">
+
+    <!-- GAME PAGE -->
+    <div id="gamePage">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Today's Grid</div>
+          <div class="page-sub" id="dateLabel"></div>
+        </div>
+        <div class="diff-tabs">
+          <button class="diff-tab active" onclick="setDifficulty('easy')">Easy</button>
+          <button class="diff-tab" onclick="setDifficulty('medium')">Medium</button>
+          <button class="diff-tab" onclick="setDifficulty('hard')">Hard</button>
+        </div>
+      </div>
+
+      <div class="hud-bar">
+        <div class="hud-card"><div class="hud-label">Time</div><div class="hud-value accent" id="timerEl">00:00</div></div>
+        <div class="hud-card"><div class="hud-label">Mistakes</div><div class="hud-value danger" id="mistakesEl">0</div></div>
+        <div class="hud-card"><div class="hud-label">Difficulty</div><div class="hud-value" id="diffEl" style="font-size:1rem;text-transform:capitalize;">Easy</div></div>
+        <div class="hud-card"><div class="hud-label">Progress</div><div class="hud-value" id="progressEl">0/81</div></div>
+      </div>
+
+      <div class="game-area">
+        <div class="grid-wrap">
+          <div class="sudoku-grid" id="grid"></div>
+        </div>
+        <div class="controls">
+          <div class="numpad" id="numpad"></div>
+          <div class="action-row">
+            <button class="action-btn" onclick="togglePencil()" id="pencilBtn">✏️ Pencil</button>
+            <button class="action-btn" onclick="toggleHint()" id="hintBtn">💡 Hint</button>
+          </div>
+          <div class="bottom-row">
+            <button class="new-game-btn" onclick="newGame()">↺ &nbsp;New Game</button>
+            <button class="solve-btn" onclick="revealSolution()">Show Solution</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY PAGE -->
+    <div id="historyPage" style="display:none;">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Match History</div>
+          <div class="page-sub" id="historySubLabel"></div>
+        </div>
+      </div>
+      <div class="history-filters">
+        <button class="filter-btn active" onclick="filterHistory('all')" id="fAll">All</button>
+        <button class="filter-btn" onclick="filterHistory('easy')" id="fEasy">Easy</button>
+        <button class="filter-btn" onclick="filterHistory('medium')" id="fMedium">Medium</button>
+        <button class="filter-btn" onclick="filterHistory('hard')" id="fHard">Hard</button>
+        <button class="filter-btn" onclick="filterHistory('won')" id="fWon">Won Only</button>
+      </div>
+      <div class="history-table-wrap">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>#</th><th>Date & Time</th><th>Difficulty</th>
+              <th>Result</th><th>Time Taken</th><th>Mistakes</th><th>Score</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+        <div class="empty-state" id="emptyState" style="display:none;">
+          <div class="empty-icon">📭</div>
+          No games found. Start playing to build your history!
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <div class="modal-icon" id="modalIcon"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-sub" id="modalSub"></div>
+    <div class="modal-stats" id="modalStats"></div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<script src="app.min.js"></script>
+</body>
+</html>
